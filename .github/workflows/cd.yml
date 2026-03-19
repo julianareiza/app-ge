@@ -40,6 +40,9 @@ jobs:
       # - name: Update kubeconfig
       #   run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
+      - name: Create namespace
+        run: kubectl create namespace app --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Set image tag
         run: |
           TAG="${{ github.event.inputs.image_tag || github.sha }}"
