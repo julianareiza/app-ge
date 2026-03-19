@@ -51,7 +51,7 @@ async def create_item(item: ItemCreate, x_api_key: str | None = Header(default=N
     item_id = str(len(_items) + 1)
     new_item = {"id": item_id, "name": item.name, "description": item.description}
     _items[item_id] = new_item
-    logger.info("Item created", extra={"item_id": item_id, "name": item.name})
+    logger.info("Item created", extra={"item_id": item_id, "item_name": item.name})
     return new_item
 
 
