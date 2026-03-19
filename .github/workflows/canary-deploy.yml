@@ -1,101 +1,109 @@
-# name: Canary / A-B Deployment
+name: Canary / A-B Deployment
 
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       action:
-#         description: "Action to perform"
-#         required: true
-#         type: choice
-#         options:
-#           - deploy
-#           - promote
-#           - rollback
-#       canary_image_tag:
-#         description: "Image tag for canary (required for deploy)"
-#         required: false
-#         default: "latest"
-#       canary_weight:
-#         description: "Traffic weight for canary (0-100)"
-#         required: false
-#         default: "20"
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action to perform"
+        required: true
+        type: choice
+        options:
+          - deploy
+          - promote
+          - rollback
+      canary_image_tag:
+        description: "Image tag for canary (required for deploy)"
+        required: false
+        default: "latest"
+      canary_weight:
+        description: "Traffic weight for canary (0-100)"
+        required: false
+        default: "20"
 
 # env:
 #   AWS_REGION: ${{ secrets.AWS_REGION }}
 #   EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
-#   IMAGE_NAME: julianareiza/app-ge
 
-# jobs:
-#   canary:
-#     name: Canary ${{ github.event.inputs.action }}
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v4
+env:
+  IMAGE_NAME: julianareiza/app-ge
 
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v4
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ env.AWS_REGION }}
+jobs:
+  canary:
+    name: Canary ${{ github.event.inputs.action }}
+    runs-on: arc-runner-set
+    steps:
+      - uses: actions/checkout@v4
 
-#       - name: Update kubeconfig
-#         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+      - name: Instalar kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
-#       # --- DEPLOY CANARY ---
-#       - name: Deploy canary
-#         if: github.event.inputs.action == 'deploy'
-#         run: |
-#           TAG="${{ github.event.inputs.canary_image_tag }}"
-#           WEIGHT="${{ github.event.inputs.canary_weight }}"
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ env.AWS_REGION }}
 
-#           # Update canary image
-#           sed -i "s|julianareiza/app-ge:.*|julianareiza/app-ge:${TAG}|g" k8s/canary/deployment-canary.yml
+      # - name: Update kubeconfig
+      #   run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
-#           # Update canary weight
-#           sed -i "s|canary-weight: \".*\"|canary-weight: \"${WEIGHT}\"|g" k8s/canary/ingress-canary.yml
+      # --- DEPLOY CANARY ---
+      - name: Deploy canary
+        if: github.event.inputs.action == 'deploy'
+        run: |
+          TAG="${{ github.event.inputs.canary_image_tag }}"
+          WEIGHT="${{ github.event.inputs.canary_weight }}"
 
-#           # Apply canary resources
-#           kubectl apply -f k8s/canary/
+          # Update canary image
+          sed -i "s|julianareiza/app-ge:.*|julianareiza/app-ge:${TAG}|g" k8s/canary/deployment-canary.yml
 
-#           # Wait for rollout
-#           kubectl rollout status deployment/app-ge-canary -n app --timeout=120s
+          # Update canary weight
+          sed -i "s|canary-weight: \".*\"|canary-weight: \"${WEIGHT}\"|g" k8s/canary/ingress-canary.yml
 
-#           echo "✅ Canary deployed with ${WEIGHT}% traffic on tag ${TAG}"
-#           echo "Monitor Grafana dashboards, then run 'promote' or 'rollback'"
+          # Apply canary resources
+          kubectl apply -f k8s/canary/
 
-#       # --- PROMOTE CANARY TO STABLE ---
-#       - name: Promote canary
-#         if: github.event.inputs.action == 'promote'
-#         run: |
-#           # Get current canary image
-#           CANARY_IMAGE=$(kubectl get deployment app-ge-canary -n app -o jsonpath='{.spec.template.spec.containers[0].image}')
-#           echo "Promoting canary image: ${CANARY_IMAGE}"
+          # Wait for rollout
+          kubectl rollout status deployment/app-ge-canary -n app --timeout=120s
 
-#           # Update stable deployment with canary image
-#           sed -i "s|julianareiza/app-ge:.*|${CANARY_IMAGE}|g" k8s/base/deployment.yml
-#           kubectl apply -f k8s/base/deployment.yml
+          echo "Canary deployed with ${WEIGHT}% traffic on tag ${TAG}"
+          echo "Monitor Grafana dashboards, then run 'promote' or 'rollback'"
 
-#           # Wait for stable rollout
-#           kubectl rollout status deployment/app-ge -n app --timeout=300s
+      # --- PROMOTE CANARY TO STABLE ---
+      - name: Promote canary
+        if: github.event.inputs.action == 'promote'
+        run: |
+          # Get current canary image
+          CANARY_IMAGE=$(kubectl get deployment app-ge-canary -n app -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Promoting canary image: ${CANARY_IMAGE}"
 
-#           # Remove canary resources
-#           kubectl delete -f k8s/canary/ --ignore-not-found=true
+          # Update stable deployment with canary image
+          sed -i "s|julianareiza/app-ge:.*|${CANARY_IMAGE}|g" k8s/base/deployment.yml
+          kubectl apply -f k8s/base/deployment.yml
 
-#           echo "✅ Canary promoted to stable. Canary resources removed."
+          # Wait for stable rollout
+          kubectl rollout status deployment/app-ge -n app --timeout=300s
 
-#       # --- ROLLBACK CANARY ---
-#       - name: Rollback canary
-#         if: github.event.inputs.action == 'rollback'
-#         run: |
-#           kubectl delete -f k8s/canary/ --ignore-not-found=true
-#           echo "✅ Canary rolled back. All traffic restored to stable."
+          # Remove canary resources
+          kubectl delete -f k8s/canary/ --ignore-not-found=true
 
-#       - name: Show status
-#         run: |
-#           echo "=== Deployments ==="
-#           kubectl get deployments -n app
-#           echo "=== Pods ==="
-#           kubectl get pods -n app
-#           echo "=== Ingresses ==="
-#           kubectl get ingress -n app
+          echo "Canary promoted to stable. Canary resources removed."
+
+      # --- ROLLBACK CANARY ---
+      - name: Rollback canary
+        if: github.event.inputs.action == 'rollback'
+        run: |
+          kubectl delete -f k8s/canary/ --ignore-not-found=true
+          echo "Canary rolled back. All traffic restored to stable."
+
+      - name: Show status
+        run: |
+          echo "=== Deployments ==="
+          kubectl get deployments -n app
+          echo "=== Pods ==="
+          kubectl get pods -n app
+          echo "=== Ingresses ==="
+          kubectl get ingress -n app
