@@ -21,18 +21,18 @@ from app.config import settings
 
 def setup_otel_providers() -> None:
     """Configure OTel providers (traces, metrics, logs). Call BEFORE app starts."""
-    resource = Resource.create({
-        "service.name": settings.otel_service_name,
-        "service.version": settings.app_version,
-    })
+    resource = Resource.create(
+        {
+            "service.name": settings.otel_service_name,
+            "service.version": settings.app_version,
+        }
+    )
 
     endpoint = settings.otel_exporter_otlp_endpoint
 
     # Traces
     tracer_provider = TracerProvider(resource=resource)
-    tracer_provider.add_span_processor(
-        BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True))
-    )
+    tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True)))
     trace.set_tracer_provider(tracer_provider)
 
     # Metrics
@@ -45,9 +45,7 @@ def setup_otel_providers() -> None:
 
     # Logs
     logger_provider = LoggerProvider(resource=resource)
-    logger_provider.add_log_record_processor(
-        BatchLogRecordProcessor(OTLPLogExporter(endpoint=endpoint, insecure=True))
-    )
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter(endpoint=endpoint, insecure=True)))
     logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
 
     # Inject trace context into log records
