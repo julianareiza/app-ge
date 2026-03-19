@@ -47,15 +47,6 @@ jobs:
           helm repo add grafana https://grafana.github.io/helm-charts
           helm repo update
 
-      - name: Install NGINX Ingress Controller
-        run: |
-          helm upgrade --install ingress-nginx ingress-nginx \
-            --repo https://kubernetes.github.io/ingress-nginx \
-            --namespace ingress-nginx \
-            --create-namespace \
-            --set controller.metrics.enabled=true \
-            --set controller.metrics.serviceMonitor.enabled=true
-
       - name: Install kube-prometheus-stack
         run: |
           helm upgrade --install kube-prom prometheus-community/kube-prometheus-stack \
@@ -76,6 +67,15 @@ jobs:
             -n ${{ env.NAMESPACE }} \
             -f helm-values/tempo.yml \
             --wait --timeout 10m
+
+      - name: Install NGINX Ingress Controller
+        run: |
+          helm upgrade --install ingress-nginx ingress-nginx \
+            --repo https://kubernetes.github.io/ingress-nginx \
+            --namespace ingress-nginx \
+            --create-namespace \
+            --set controller.metrics.enabled=true \
+            --set controller.metrics.serviceMonitor.enabled=true
 
       - name: Apply Grafana alert ConfigMaps
         run: kubectl apply -f helm-values/grafana-alerts.yml
