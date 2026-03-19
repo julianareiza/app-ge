@@ -2,10 +2,10 @@ name: Deploy OTel Collector
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - "k8s/otel-collector/**"
+  push:
+    branches: [main]
+    paths:
+      - "k8s/otel-collector/**"
 
 # env:
 #   AWS_REGION: ${{ secrets.AWS_REGION }}

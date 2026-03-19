@@ -2,10 +2,10 @@ name: Deploy Grafana Stack
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - "helm-values/**"
+  push:
+    branches: [main]
+    paths:
+      - "helm-values/**"
 
 env:
   NAMESPACE: observability
