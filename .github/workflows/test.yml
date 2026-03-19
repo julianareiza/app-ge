@@ -2,7 +2,7 @@ name: Test ARC Runner
 on:
   push:
     branches:
-      - main
+      - development
 
 jobs:
   test:
