@@ -15,8 +15,9 @@ app = FastAPI(
 
 # OTel instrumentation — must happen BEFORE app starts serving
 if os.getenv("OTEL_ENABLED", "true").lower() == "true":
-    from app.middleware.otel import setup_otel_providers, create_metrics_middleware
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    from app.middleware.otel import create_metrics_middleware, setup_otel_providers
 
     setup_otel_providers()
     app.add_middleware(create_metrics_middleware())
