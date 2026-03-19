@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-ge-otel-config
+  namespace: app
+data:
+  OTEL_ENABLED: "true"
+  OTEL_SERVICE_NAME: "app-ge"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc.cluster.local:4317"

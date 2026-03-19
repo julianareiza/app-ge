@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-ge
+  namespace: app
+  labels:
+    app: app-ge
+    version: stable
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app-ge
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: app-ge
+        version: stable
+    spec:
+      serviceAccountName: app-ge
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: app-ge
+          image: julianareiza/app-ge:latest
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: app-ge-otel-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+      volumes: []

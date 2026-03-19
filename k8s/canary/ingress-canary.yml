@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ge-canary-ingress
+  namespace: app
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "20"
+    nginx.ingress.kubernetes.io/canary-by-header: "X-Canary"
+    nginx.ingress.kubernetes.io/canary-by-header-value: "always"
+    nginx.ingress.kubernetes.io/canary-by-cookie: "canary"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: app-ge.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app-ge-canary-svc
+                port:
+                  number: 80

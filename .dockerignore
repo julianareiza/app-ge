@@ -1,0 +1,14 @@
+.git
+.github
+tests
+__pycache__
+*.pyc
+.env
+.env.*
+*.md
+.ruff_cache
+.pytest_cache
+.coverage
+htmlcov
+k8s
+helm-values
