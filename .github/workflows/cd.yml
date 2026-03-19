@@ -19,7 +19,7 @@ env:
 jobs:
   deploy:
     name: Deploy to EKS
-    runs-on: arc-runner-set
+    runs-on: arc-runner-set-app
     steps:
       - uses: actions/checkout@v4
 

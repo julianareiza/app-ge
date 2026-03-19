@@ -30,7 +30,7 @@ env:
 jobs:
   canary:
     name: Canary ${{ github.event.inputs.action }}
-    runs-on: arc-runner-set
+    runs-on: arc-runner-set-app
     steps:
       - uses: actions/checkout@v4
 
