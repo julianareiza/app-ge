@@ -33,7 +33,20 @@ jobs:
         run: bandit -r app/ -c pyproject.toml || true
 
       - name: Run tests
-        run: pytest --cov=app --cov-report=term-missing
+        run: pytest --cov=app --cov-report=term-missing --cov-report=xml:coverage.xml
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=julianareiza
+            -Dsonar.projectKey=julianareiza_app-ge
+            -Dsonar.sources=app/
+            -Dsonar.tests=tests/
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.host.url=https://sonarcloud.io
 
   build-and-push:
     name: Build & Push Image
