@@ -43,10 +43,11 @@ jobs:
       - name: Create namespace
         run: kubectl create namespace app --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Set image tag
+      - name: Set image tag and version
         run: |
           TAG="${{ github.event.inputs.image_tag || github.sha }}"
           sed -i "s|julianareiza/app-ge:.*|julianareiza/app-ge:${TAG}|g" k8s/base/deployment.yml
+          sed -i "s|value: \"latest\"|value: \"${TAG}\"|g" k8s/base/deployment.yml
 
       - name: Deploy to Kubernetes
         run: kubectl apply -f k8s/base/

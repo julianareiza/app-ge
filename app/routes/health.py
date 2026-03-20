@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter
 
 router = APIRouter(tags=["health"])
@@ -11,3 +13,11 @@ async def health():
 @router.get("/ready")
 async def ready():
     return {"status": "ready"}
+
+
+@router.get("/version")
+async def version():
+    return {
+        "version": os.getenv("APP_VERSION", "unknown"),
+        "commit": os.getenv("APP_COMMIT", "unknown"),
+    }
