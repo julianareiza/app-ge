@@ -57,8 +57,9 @@ jobs:
           TAG="${{ github.event.inputs.canary_image_tag }}"
           WEIGHT="${{ github.event.inputs.canary_weight }}"
 
-          # Update canary image
+          # Update canary image and version
           sed -i "s|julianareiza/app-ge:.*|julianareiza/app-ge:${TAG}|g" k8s/canary/deployment-canary.yml
+          sed -i "s|value: \"unknown\"|value: \"${TAG}\"|g" k8s/canary/deployment-canary.yml
 
           # Update canary weight
           sed -i "s|canary-weight: \".*\"|canary-weight: \"${WEIGHT}\"|g" k8s/canary/ingress-canary.yml

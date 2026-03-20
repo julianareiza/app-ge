@@ -30,6 +30,11 @@ spec:
           ports:
             - containerPort: 8000
               protocol: TCP
+          env:
+            - name: APP_VERSION
+              value: "canary"
+            - name: APP_COMMIT
+              value: "unknown"
           envFrom:
             - configMapRef:
                 name: app-ge-otel-config
