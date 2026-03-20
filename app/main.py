@@ -74,4 +74,3 @@ if os.getenv("OTEL_ENABLED", "true").lower() == "true":
 # ---------------------------------------------------------------------------
 app.include_router(health.router)
 app.include_router(items.router)
-
