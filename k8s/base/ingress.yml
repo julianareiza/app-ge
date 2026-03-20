@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: app-ge.local
+    - host: julian-areiza-el-mas-crack
       http:
         paths:
           - path: /
